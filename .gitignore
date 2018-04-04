@@ -1,7 +1,9 @@
 *.iml
 .idea
-build/
-dist/
 __pycache__
 .pytest_cache/
 .tox
+# setuptools sdist leaves files around, let's ignore
+src/dnsplug.egg-info
+dist/
+build/
