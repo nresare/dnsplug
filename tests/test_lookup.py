@@ -1,7 +1,6 @@
-from dnsplug.dns import Session
+from dnsplug import lookup
 
 
-def test_lookup():
-    s = Session()
-    response = s.dns("jresolvertest.resare.com", "MX")
-    assert response == [(10, "mail.resare.com")]
+def test_lookup_mx():
+    response = lookup('jresolvertest.resare.com', 'MX')
+    assert response == [(10, 'mail.resare.com')]
