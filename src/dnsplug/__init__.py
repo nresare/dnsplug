@@ -21,7 +21,12 @@ from typing import Union, Tuple, List
 
 SESSION_SINGLETON = Session()
 
-ResultType = Union[str, Tuple[int, str]]
+ResultType = Union[
+    str,               # used for A, PTR
+    Tuple[int, str],   # used for MX
+    List[bytes],       # used for TXT and SPF
+    bytes              # used for AAAA
+]
 
 
 def lookup(name, query_type):
