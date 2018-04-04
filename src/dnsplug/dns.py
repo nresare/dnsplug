@@ -1,3 +1,23 @@
+# dnsplug - a thin wrapper and caching layer for dns lookups
+# Copyright (C) 2007-2016 Stuart Gathman <stuart@gathman.org>
+# Copyright (C) 2018 Noa Resare <noa@resare.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+# This code is copied pretty much as is from
+# https://github.com/sdgathman/pymilter/blob/master/Milter/dns.py
 
 # Provide a higher level interface to pydns.
 
