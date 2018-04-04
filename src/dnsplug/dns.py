@@ -93,8 +93,14 @@ class Session(object):
     post: isinstance(__return__, types.ListType)
     """
     if name.endswith('.'): name = name[:-1]
-    if not reduce(lambda x,y:x and 0 < len(y) < 64, name.split('.'),True):
-        return []   # invalid DNS name (too long or empty)
+
+    labels = name.split(".")
+    if not labels:
+        return []
+    for label in labels:
+        if not 0 < len(label) < 64:
+            return []
+
     name = name.lower()
     result = self.cache.get( (name, qtype) )
     cname = None
