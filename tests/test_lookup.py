@@ -38,3 +38,7 @@ def test_lookup_txt():
 def test_lookup_ptr():
     response = lookup('dnsplug3.resare.com', 'PTR')
     assert response == ['dnsplug0.resare.com']
+
+
+def test_non_existing():
+    assert lookup('non_existing.resare.com', 'A') == []
