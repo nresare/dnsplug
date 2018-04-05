@@ -16,10 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from .dns import Session
+from dnsplug.dns import Session, DNSException
 from typing import Union, Tuple, List
 
-SESSION_SINGLETON = Session()
+_SESSION_SINGLETON = Session()
 
 ResultType = Union[
     str,               # used for A, PTR
@@ -31,12 +31,14 @@ ResultType = Union[
 
 def lookup(name, query_type):
     # type: (str, str) -> List[ResultType]
-    """Lookup and return the DNS record with name and query_type. The result is
-    cached for improved performance.
+    """Lookup and return the DNS record with name and query_type. As the use
+    case for this module (so far) is a single email filtering session,
+    everything is cached indefinitely for improved performance.
 
     :param name: a name, such as "google.com"
     :param query_type: a dns record type, such as "A" or "TXT"
     :return: a list of strings with the lookup result, or None if there was
     no record.
+    :raises DNSException: if there was an issue
     """
-    return SESSION_SINGLETON.dns(name, query_type)
+    return _SESSION_SINGLETON.dns(name, query_type)
