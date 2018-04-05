@@ -22,10 +22,21 @@
 # Provide a higher level interface to pydns.
 
 from __future__ import print_function
-import DNS
-from DNS import DNSError
+from __future__ import absolute_import
+
+try:
+    import DNS
+    pydns = True
+except ImportError:
+    from dns.resolver import query, NoAnswer, NXDOMAIN
+    from dns.exception import DNSException as dnspython_DNSException
+    pydns = False
 
 MAX_CNAME = 10
+
+
+class DNSException(Exception):
+    pass
 
 
 ## Lookup DNS records by label and RR type.
@@ -34,7 +45,7 @@ MAX_CNAME = 10
 # @param name the DNS label to lookup
 # @param qtype the name of the DNS RR type to lookup
 # @return a list of ((name,type),data) tuples
-def DNSLookup(name, qtype):
+def pydns_lookup(name, qtype):
     try:
         # To be thread safe, we create a fresh DnsRequest with
         # each call.  It would be more efficient to reuse
@@ -48,7 +59,36 @@ def DNSLookup(name, qtype):
         # return both as binary string.
         return [((a['name'], a['typename']), a['data']) for a in resp.answers]
     except IOError as x:
-        raise DNSError(str(x))
+        raise DNSException(str(x))
+
+
+def dnspython_lookup(name, query_type):
+    ret_val = []
+    try:
+        answers = query(name, query_type)
+        for response in answers:
+            if query_type == 'A':
+                ret_val.append(((name, query_type), response.address))
+            elif query_type == 'AAAA':
+                ret_val.append(((name, query_type), response.to_digestable()))
+            elif query_type == 'MX':
+                exchange = response.exchange.to_text()
+                if exchange.endswith('.'):
+                    exchange = exchange[:-1]
+                ret_val.append(((name, query_type), (response.preference, exchange)))
+            elif query_type == 'PTR':
+                ret_val.append(((name, query_type), response.target.to_text(True)))
+            elif query_type == 'TXT' or query_type == 'SPF':
+                ret_val.append(((name, query_type), response.strings))
+    except NoAnswer:
+        pass
+    except NXDOMAIN:
+        pass
+    except dnspython_DNSException as x:
+        raise DNSException('DNS ' + str(x))
+    return ret_val
+
+
 
 class Session(object):
   """A Session object has a simple cache with no TTL that is valid
@@ -112,7 +152,7 @@ class Session(object):
         cname = cname[0]
     else:
         safe2cache = Session.SAFE2CACHE
-        for k, v in DNSLookup(name, qtype):
+        for k, v in pydns_lookup(name, qtype) if pydns else dnspython_lookup(name, qtype):
             if k == cnamek:
                 cname = v
             if k[1] == 'CNAME' or (qtype,k[1]) in safe2cache:
@@ -123,10 +163,10 @@ class Session(object):
             cnames = {}
         elif len(cnames) >= MAX_CNAME:
             #return result    # if too many == NX_DOMAIN
-            raise DNSError('Length of CNAME chain exceeds %d' % MAX_CNAME)
+            raise DNSException('Length of CNAME chain exceeds %d' % MAX_CNAME)
         cnames[name] = cname
         if cname.lower().rstrip('.') in cnames:
-            raise DNSError('CNAME loop')
+            raise DNSException('CNAME loop')
         result = self.dns(cname, qtype, cnames=cnames)
         if result:
             self.cache[(name,qtype)] = result
@@ -139,7 +179,8 @@ class Session(object):
             return [''.join(s.decode(enc) for s in a)
                 for a in self.dns(domainname, 'TXT')]
         except UnicodeEncodeError:
-            raise DNSError('Non-ascii character in SPF TXT record.')
+            raise DNSException('Non-ascii character in SPF TXT record.')
     return []
 
-DNS.DiscoverNameServers()
+if pydns:
+    DNS.DiscoverNameServers()
